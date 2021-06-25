@@ -1,14 +1,8 @@
-# elasticsearch-local [![CircleCI](https://circleci.com/gh/shelfio/elasticsearch-local/tree/master.svg?style=svg)](https://circleci.com/gh/shelfio/elasticsearch-local/tree/master) ![](https://img.shields.io/badge/code_style-prettier-ff69b4.svg) [![npm (scoped)](https://img.shields.io/npm/v/@shelf/elasticsearch-local.svg)](https://www.npmjs.com/package/@shelf/elasticsearch-local)
+# elasticsearch-local-docker
 
-> Run any version of ElasticSearch locally
+> Run ES 7.13.2 locally in docker
 
 ## Usage
-
-### 0. Install
-
-```
-$ yarn add @shelf/elasticsearch-local --dev
-```
 
 ### 1. Start Elasticsearch
 
@@ -16,10 +10,7 @@ $ yarn add @shelf/elasticsearch-local --dev
 import {start} from '@shelf/elasticsearch-local';
 
 await start({
-  esVersion: '7.3.0',
   port: 9000, // optional
-  clusterName: 'test', // optional
-  nodeName: 'test', // optional
   indexes: [
     {
       name: 'your-index',
@@ -49,16 +40,3 @@ import {stop} from '@shelf/elasticsearch-local';
 
 await stop();
 ```
-
-## Publish
-
-```sh
-$ git checkout master
-$ yarn version
-$ yarn publish
-$ git push origin master --tags
-```
-
-## License
-
-MIT © [Shelf](https://shelf.io)
