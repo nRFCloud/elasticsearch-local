@@ -3,6 +3,7 @@ import {debug} from 'debug';
 import Docker, { Container } from "dockerode"
 import needle = require("needle")
 import {promisify} from 'util';
+import { Writable } from 'stream';
 
 const setTimeoutPromise = promisify((time: number, callback: (err: any, data: any) => void) => setTimeout(callback, time))
 const logger = debug("elasticsearch-local-docker")
@@ -40,6 +41,8 @@ export async function start(options: StartESOptions) {
     fromImage: ES_IMAGE
   })
 
+  const nullStream =new (class extends Writable {_write = () => {}})();
+  image.pipe(nullStream)
   if (image.readable) {
     logger("Waiting for image")
     await new Promise(fulfill => image.on("end", fulfill))

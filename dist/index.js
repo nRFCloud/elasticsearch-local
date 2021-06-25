@@ -8,6 +8,7 @@ const debug_1 = require("debug");
 const dockerode_1 = __importDefault(require("dockerode"));
 const needle = require("needle");
 const util_1 = require("util");
+const stream_1 = require("stream");
 const setTimeoutPromise = util_1.promisify((time, callback) => setTimeout(callback, time));
 const logger = debug_1.debug("elasticsearch-local-docker");
 const docker = new dockerode_1.default();
@@ -23,6 +24,13 @@ async function start(options) {
     const image = await docker.createImage({
         fromImage: ES_IMAGE
     });
+    const nullStream = new (class extends stream_1.Writable {
+        constructor() {
+            super(...arguments);
+            this._write = () => { };
+        }
+    })();
+    image.pipe(nullStream);
     if (image.readable) {
         logger("Waiting for image");
         await new Promise(fulfill => image.on("end", fulfill));
