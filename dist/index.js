@@ -30,7 +30,7 @@ async function start(options) {
             this._write = () => { };
         }
     })();
-    image.pipe(nullStream);
+    image.pipe(process.stdout);
     if (image.readable) {
         logger("Waiting for image");
         await new Promise(fulfill => image.on("end", fulfill));
@@ -91,6 +91,7 @@ async function findExistingContainer() {
 async function stop() {
     await exports.esContainer.stop();
     await exports.esContainer.remove();
+    logger("ES container stopped and removed");
 }
 exports.stop = stop;
 //# sourceMappingURL=index.js.map

@@ -42,7 +42,7 @@ export async function start(options: StartESOptions) {
   })
 
   const nullStream =new (class extends Writable {_write = () => {}})();
-  image.pipe(nullStream)
+  image.pipe(process.stdout)
   if (image.readable) {
     logger("Waiting for image")
     await new Promise(fulfill => image.on("end", fulfill))
@@ -109,4 +109,5 @@ async function findExistingContainer() {
 export async function stop(){
   await esContainer.stop();
   await esContainer.remove();
+  logger("ES container stopped and removed")
 }
