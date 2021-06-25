@@ -11,6 +11,7 @@ const util_1 = require("util");
 const setTimeoutPromise = util_1.promisify((time, callback) => setTimeout(callback, time));
 const logger = debug_1.debug("elasticsearch-local-docker");
 const docker = new dockerode_1.default();
+const pullPromise = util_1.promisify(docker.pull);
 let PORT = 9200;
 let ES_URL = `http://localhost:9200`;
 const ES_IMAGE = `elasticsearch:7.13.2`;
@@ -19,7 +20,13 @@ async function start(options) {
     const { port = 9200, indexes = [], } = options;
     PORT = port;
     ES_URL = `http://localhost:${PORT}`;
-    await docker.pull(ES_IMAGE);
+    const image = await docker.createImage({
+        fromImage: ES_IMAGE
+    });
+    if (image.readable) {
+        logger("Waiting for image");
+        await new Promise(fulfill => image.on("end", fulfill));
+    }
     exports.esContainer = await findExistingContainer();
     if (exports.esContainer == null) {
         exports.esContainer = await startNewContainer(port);

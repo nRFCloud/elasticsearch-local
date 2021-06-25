@@ -18,6 +18,8 @@ interface ESIndex {
 }
 
 const docker = new Docker()
+const pullPromise = promisify(docker.pull as (tag: string, options: any, callback: any) => void)
+
 let PORT = 9200;
 let ES_URL = `http://localhost:9200`
 export let esContainer: Container;
@@ -34,7 +36,14 @@ export async function start(options: StartESOptions) {
 
   ES_URL = `http://localhost:${PORT}`;
 
-  await docker.pull(ES_IMAGE)
+  const image = await docker.createImage({
+    fromImage: ES_IMAGE
+  })
+
+  if (image.readable) {
+    logger("Waiting for image")
+    await new Promise(fulfill => image.on("end", fulfill))
+  }
 
   esContainer = await findExistingContainer();
   if (esContainer == null) {
