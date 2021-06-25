@@ -33,6 +33,9 @@ export async function start(options: StartESOptions) {
   PORT = port;
 
   ES_URL = `http://localhost:${PORT}`;
+
+  await docker.pull(ES_IMAGE)
+
   esContainer = await findExistingContainer();
   if (esContainer == null) {
     esContainer = await startNewContainer(port);
@@ -54,6 +57,7 @@ async function waitForES() {
 
 async function startNewContainer(port: number) {
   logger("Creating new ES container")
+
   const container = await docker.createContainer({
     name: NAME,
     Image: ES_IMAGE,

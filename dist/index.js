@@ -19,6 +19,7 @@ async function start(options) {
     const { port = 9200, indexes = [], } = options;
     PORT = port;
     ES_URL = `http://localhost:${PORT}`;
+    await docker.pull(ES_IMAGE);
     exports.esContainer = await findExistingContainer();
     if (exports.esContainer == null) {
         exports.esContainer = await startNewContainer(port);
