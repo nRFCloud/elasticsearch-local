@@ -27,9 +27,6 @@ async function start(options) {
     const imageOptions = {
         fromImage: ES_IMAGE,
     };
-    if (os_1.arch() === "arm64") {
-        imageOptions.platform = 'linux/amd64';
-    }
     const image = await docker.createImage(imageOptions);
     const dir = await fs_1.promises.mkdtemp(path_1.join(os_1.tmpdir(), "docker-garbage-"));
     const file = fs_1.createWriteStream(path_1.join(dir, crypto_1.randomBytes(8).toString("hex")));

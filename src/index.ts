@@ -45,11 +45,6 @@ export async function start(options: StartESOptions) {
     fromImage: ES_IMAGE,
   }
 
-  if (arch() === "arm64") {
-    // Handle macs with M1
-    imageOptions.platform = 'linux/amd64'
-  }
-
   const image = await docker.createImage(imageOptions)
 
 
