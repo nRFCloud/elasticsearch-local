@@ -18,7 +18,7 @@ const docker = new dockerode_1.default();
 const pullPromise = util_1.promisify(docker.pull);
 let PORT = 9200;
 let ES_URL = `http://localhost:9200`;
-const ES_IMAGE = `blacktop/elasticsearch:7.10`;
+const ES_IMAGE = `elasticsearch:7.13.2`;
 const NAME = 'elasticsearch-local-docker';
 async function start(options) {
     const { port = 9200, indexes = [], } = options;
