@@ -24,9 +24,13 @@ async function start(options) {
     const { port = 9200, indexes = [], } = options;
     PORT = port;
     ES_URL = `http://localhost:${PORT}`;
-    const image = await docker.createImage({
-        fromImage: ES_IMAGE
-    });
+    const imageOptions = {
+        fromImage: ES_IMAGE,
+    };
+    if (os_1.arch() === "arm64") {
+        imageOptions.platform = 'linux/amd64';
+    }
+    const image = await docker.createImage(imageOptions);
     const dir = await fs_1.promises.mkdtemp(path_1.join(os_1.tmpdir(), "docker-garbage-"));
     const file = fs_1.createWriteStream(path_1.join(dir, crypto_1.randomBytes(8).toString("hex")));
     image.pipe(process.stdout);
@@ -102,6 +106,7 @@ async function findExistingContainer() {
 }
 async function stop() {
     await exports.esContainer.stop();
+    await exports.esContainer.remove();
     logger("ES container stopped and removed");
 }
 exports.stop = stop;

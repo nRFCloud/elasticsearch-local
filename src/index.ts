@@ -6,7 +6,7 @@ import {promisify} from 'util';
 import { Writable } from 'stream';
 import { promises as fs, createWriteStream, createReadStream } from "fs";
 import {join} from "path";
-import {tmpdir} from 'os';
+import { arch, tmpdir } from 'os';
 import { randomBytes } from 'crypto';
 
 const setTimeoutPromise = promisify((time: number, callback: (err: any, data: any) => void) => setTimeout(callback, time))
@@ -41,9 +41,16 @@ export async function start(options: StartESOptions) {
 
   ES_URL = `http://localhost:${PORT}`;
 
-  const image = await docker.createImage({
-    fromImage: ES_IMAGE
-  })
+  const imageOptions: {[key:string]: any} = {
+    fromImage: ES_IMAGE,
+  }
+
+  if (arch() === "arm64") {
+    // Handle macs with M1
+    imageOptions.platform = 'linux/amd64'
+  }
+
+  const image = await docker.createImage(imageOptions)
 
 
   const dir = await fs.mkdtemp(join(tmpdir(), "docker-garbage-"))
@@ -128,5 +135,6 @@ async function findExistingContainer() {
 
 export async function stop(){
   await esContainer.stop();
+  await esContainer.remove();
   logger("ES container stopped and removed")
 }
