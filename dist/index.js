@@ -8,14 +8,17 @@ const debug_1 = require("debug");
 const dockerode_1 = __importDefault(require("dockerode"));
 const needle = require("needle");
 const util_1 = require("util");
-const stream_1 = require("stream");
+const fs_1 = require("fs");
+const path_1 = require("path");
+const os_1 = require("os");
+const crypto_1 = require("crypto");
 const setTimeoutPromise = util_1.promisify((time, callback) => setTimeout(callback, time));
 const logger = debug_1.debug("elasticsearch-local-docker");
 const docker = new dockerode_1.default();
 const pullPromise = util_1.promisify(docker.pull);
 let PORT = 9200;
 let ES_URL = `http://localhost:9200`;
-const ES_IMAGE = `elasticsearch:7.13.2`;
+const ES_IMAGE = `blacktop/elasticsearch:7.10`;
 const NAME = 'elasticsearch-local-docker';
 async function start(options) {
     const { port = 9200, indexes = [], } = options;
@@ -24,17 +27,14 @@ async function start(options) {
     const image = await docker.createImage({
         fromImage: ES_IMAGE
     });
-    const nullStream = new (class extends stream_1.Writable {
-        constructor() {
-            super(...arguments);
-            this._write = () => { };
-        }
-    })();
+    const dir = await fs_1.promises.mkdtemp(path_1.join(os_1.tmpdir(), "docker-garbage-"));
+    const file = fs_1.createWriteStream(path_1.join(dir, crypto_1.randomBytes(8).toString("hex")));
     image.pipe(process.stdout);
     if (image.readable) {
         logger("Waiting for image");
         await new Promise(fulfill => image.on("end", fulfill));
     }
+    file.close();
     exports.esContainer = await findExistingContainer();
     if (exports.esContainer == null) {
         exports.esContainer = await startNewContainer(port);
@@ -79,18 +79,29 @@ async function createIndexes(esUrl, indices) {
     }
 }
 async function findExistingContainer() {
-    const containers = await docker.listContainers();
+    const containers = await docker.listContainers({
+        all: true,
+        filters: `{"name":["/${NAME}"]}`
+    });
     for (const container of containers) {
-        if (container.Names.find(value => value.includes(NAME)) && container.Image === ES_IMAGE) {
+        if (container.Image === ES_IMAGE) {
             logger(`found existing ES container ${container.Id}`);
-            return docker.getContainer(container.Id);
+            const instance = docker.getContainer(container.Id);
+            switch (container.State) {
+                case "exited":
+                    await instance.start();
+                    break;
+                case "paused":
+                    await instance.unpause();
+                    break;
+            }
+            return instance;
         }
     }
     return null;
 }
 async function stop() {
     await exports.esContainer.stop();
-    await exports.esContainer.remove();
     logger("ES container stopped and removed");
 }
 exports.stop = stop;

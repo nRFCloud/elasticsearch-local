@@ -472,7 +472,7 @@
         "affectsGlobalScope": false
       },
       "../src/index.ts": {
-        "version": "5ddf12dcfe7951b15020e3dcb60328400d58cdbd4e665af1ff87b9956742908f",
+        "version": "84a8819477db730c41f8c9670b5ec489c990bf25662e812915662bac12e98c2f",
         "signature": "6e6a9d3d542569e1a9802bb04dba0bc189ca708f57904e6a08e14164a3cb762f",
         "affectsGlobalScope": false
       }
@@ -685,6 +685,10 @@
         "../node_modules/@types/debug/index.d.ts",
         "../node_modules/@types/dockerode/index.d.ts",
         "../node_modules/@types/needle/index.d.ts",
+        "../node_modules/@types/node/crypto.d.ts",
+        "../node_modules/@types/node/fs.d.ts",
+        "../node_modules/@types/node/os.d.ts",
+        "../node_modules/@types/node/path.d.ts",
         "../node_modules/@types/node/stream.d.ts",
         "../node_modules/@types/node/util.d.ts"
       ]

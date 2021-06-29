@@ -4,6 +4,10 @@ import Docker, { Container } from "dockerode"
 import needle = require("needle")
 import {promisify} from 'util';
 import { Writable } from 'stream';
+import { promises as fs, createWriteStream, createReadStream } from "fs";
+import {join} from "path";
+import {tmpdir} from 'os';
+import { randomBytes } from 'crypto';
 
 const setTimeoutPromise = promisify((time: number, callback: (err: any, data: any) => void) => setTimeout(callback, time))
 const logger = debug("elasticsearch-local-docker")
@@ -24,7 +28,7 @@ const pullPromise = promisify(docker.pull as (tag: string, options: any, callbac
 let PORT = 9200;
 let ES_URL = `http://localhost:9200`
 export let esContainer: Container;
-const ES_IMAGE = `elasticsearch:7.13.2`
+const ES_IMAGE = `blacktop/elasticsearch:7.10`
 const NAME = 'elasticsearch-local-docker'
 
 export async function start(options: StartESOptions) {
@@ -41,12 +45,16 @@ export async function start(options: StartESOptions) {
     fromImage: ES_IMAGE
   })
 
-  const nullStream =new (class extends Writable {_write = () => {}})();
+
+  const dir = await fs.mkdtemp(join(tmpdir(), "docker-garbage-"))
+  const file = createWriteStream(join(dir, randomBytes(8).toString("hex")))
+
   image.pipe(process.stdout)
   if (image.readable) {
     logger("Waiting for image")
     await new Promise(fulfill => image.on("end", fulfill))
   }
+  file.close();
 
   esContainer = await findExistingContainer();
   if (esContainer == null) {
@@ -96,11 +104,23 @@ async function createIndexes(esUrl: string, indices: ESIndex[]) {
 }
 
 async function findExistingContainer() {
-  const containers = await docker.listContainers()
+  const containers = await docker.listContainers({
+    all: true,
+    filters: `{"name":["/${NAME}"]}`
+  })
   for (const container of containers) {
-    if (container.Names.find(value => value.includes(NAME)) && container.Image === ES_IMAGE) {
+    if (container.Image === ES_IMAGE) {
       logger(`found existing ES container ${container.Id}`)
-      return docker.getContainer(container.Id)
+      const instance = docker.getContainer(container.Id)
+      switch (container.State) {
+        case "exited":
+          await instance.start();
+          break;
+        case "paused":
+          await instance.unpause();
+          break;
+      }
+      return instance;
     }
   }
   return null;
@@ -108,6 +128,5 @@ async function findExistingContainer() {
 
 export async function stop(){
   await esContainer.stop();
-  await esContainer.remove();
   logger("ES container stopped and removed")
 }
