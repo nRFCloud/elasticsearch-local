@@ -28,7 +28,7 @@ const pullPromise = promisify(docker.pull as (tag: string, options: any, callbac
 let PORT = 9200;
 let ES_URL = `http://localhost:9200`
 export let esContainer: Container;
-const ES_IMAGE = `elasticsearch:7.13.2`
+const ES_IMAGE = `public.ecr.aws/elastic/elasticsearch:7.13.2`
 const NAME = 'elasticsearch-local-docker'
 
 export async function start(options: StartESOptions) {
